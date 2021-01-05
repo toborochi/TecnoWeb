@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,19 +24,10 @@ public class DBConnection {
 
     private static DBConnection obj;
 
-    private DBConnection() {
+    public DBConnection() {
     }
 
-    public static DBConnection getInstance() {
-        if (obj == null) {
-            synchronized (DBConnection.class) {
-                if (obj == null) {
-                    obj = new DBConnection();//instance will be created at request time  
-                }
-            }
-        }
-        return obj;
-    }
+   
 
     public Connection getConnection() {
         return conn;
@@ -53,7 +45,7 @@ public class DBConnection {
         }
     }
 
-    public String getTable(String pattern) throws SQLException{
+    public LinkedList<Object[]> getTable(String pattern) throws SQLException{
         String tabla = "per_cod \tper_nom \t per_appm \t per_prof \t per_telf \t per_cel \t per_email \t per_dir \t per_flug \t per_pass";
         statement = conn.createStatement();
         ResultSet resultSet = statement.executeQuery("SELECT * FROM persona where "
@@ -69,6 +61,8 @@ public class DBConnection {
                 + "or per_pass like '%" + pattern + "%'"  
                 + ";");
         
+        LinkedList<Object[]> Tabla = new LinkedList<>();
+        
         while (resultSet.next()) {
             String per_cod = resultSet.getString("per_cod");
             String per_nom = resultSet.getString("per_nom");
@@ -80,21 +74,16 @@ public class DBConnection {
             String per_dir = resultSet.getString("per_dir");
             String per_flug = resultSet.getString("per_flug");
             String per_pass = resultSet.getString("per_pass");
-            tabla = tabla + "\n" + 
-                    per_cod + "\t" + 
-                    per_nom + "\t" + 
-                    per_appm + "\t" +
-                    per_prof + "\t" +
-                    per_telf + "\t" +
-                    per_cel + "\t" +
-                    per_email + "\t" +
-                    per_dir + "\t" +
-                    per_flug + "\t" + 
-                    per_pass + "\t";
+            
+            
+            Object[] row = {per_cod,per_nom,per_appm,per_prof,per_telf,per_cel,per_email,per_dir,per_flug,per_pass};
+            Tabla.add(row);
+            
+            
         }
         statement.close();
         resultSet.close();
-        return tabla;
+        return Tabla;
     }
     
     public void connect() {

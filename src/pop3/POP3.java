@@ -17,6 +17,7 @@ public class POP3 {
     private Socket socket;
     private BufferedReader input;
     private DataOutputStream output;
+    public int currentEmail = 1, emails = 0;
 
     public void connect() throws IOException {
         this.socket = new Socket(HOST, PORT);
@@ -53,6 +54,25 @@ public class POP3 {
         return getData(this.input);
     }
 
+    public void getListAmmount() throws IOException {
+
+        String list = getList();
+        String lines[] = list.split("\\r?\\n");
+        String[] data= new String[]{};
+        for(int i=0;i<lines.length;++i){
+            lines[i]=lines[i].toLowerCase();
+            if(lines[i].contains("messages") || lines[i].contains("message")){
+                data = lines[i].split("\\s+");
+                //System.out.println("DATOS "+data[1]);
+                break;
+            }
+        }
+        
+        //System.out.println("LISTADO: "+list);
+        this.emails = Integer.parseInt(data[1]);
+
+    }
+
     public String getMail(String mail) throws IOException {
         COMAND = "retr " + mail + JMP;
         this.output.writeBytes(COMAND);
@@ -68,7 +88,7 @@ public class POP3 {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-        if (line.compareTo("")!=0) {
+        if (line.compareTo("") != 0) {
             line = line.substring(4);
             int i = 1;
             while (line.charAt(i) != ' ') {
@@ -77,6 +97,32 @@ public class POP3 {
             line = line.substring(0, i);
         }
         return line;
+    }
+
+    public String getSubject(String mail) {
+        String lines[] = mail.split("\\r?\\n");
+        //System.out.println("Tamano " + lines.length);
+        String line = "";
+        boolean found = false;
+        for (int i = 0; i < lines.length; ++i) {
+            line = lines[i];
+            String tmp  = line.toLowerCase();
+            if (tmp.contains("subject:")) {
+                found = true;
+                break;
+            }
+        }
+        
+        if(found){
+        String sub = "subject:";
+        String tmp = line.toLowerCase();
+        
+        int pos = tmp.indexOf(sub);
+
+        return line.substring(pos+sub.length()+1,line.length() );
+        }else{
+            return "";
+        }
     }
 
     static protected String getData(BufferedReader buffer) throws IOException {
@@ -94,6 +140,18 @@ public class POP3 {
             Data = Data + Line + JMP;
         }
         return Data;
+    }
+
+    public void nextEmail() {
+        if (currentEmail + 1 <= emails) {
+            currentEmail++;
+        }
+    }
+
+    public void previousEmail() {
+        if (currentEmail - 1 >= 1) {
+            currentEmail--;
+        }
     }
 
 }
